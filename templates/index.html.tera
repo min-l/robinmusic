@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>robinserverpage</title>
+    <!--<link href="/style.css" rel="stylesheet" type="text/css" media="all">-->#
+
+    <style>
+      table {
+        border: 2px black solid;
+      }
+      th,td {
+        border-style: inset;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>let's use the computer</h1>
+    <form action="/move" method="post">
+    <table>
+    {% for file_name in file_names %}
+      <tr>
+      <td><input type="radio" id="{{file_name}}" name="album_folder" value="{{file_name}}" onchange="updateAlbum()"></td><td>{{file_name}}</td>
+      </tr>
+    {% endfor %}
+    </table>
+    <table id="album_listing_table"></table>
+
+    <input list="artist_datalist" id="artist_choice" name="artist_choice"/>
+    <datalist id="artist_datalist">
+    {% for artist in artist_names %}
+      <option value="{{artist}}"></option>
+    {% endfor %}
+    </datalist>
+    <input type="submit" value="Submit">
+    </form>
+  </body>
+
+  <script>
+
+
+
+function updateAlbum() {
+  const xhr = new XMLHttpRequest();
+  xhr.responseType = "json";
+  let album_name = document.querySelector('input[name="album_folder"]:checked').value.split("/").at(-1);
+  console.log(album_name);
+
+  xhr.onload = function() {
+    let songfiles = this.response;
+    songfiles.sort();
+    console.log(songfiles);
+    let table = document.getElementById("album_listing_table");
+    table.innerHTML = "";
+    songfiles.forEach(song => {
+      let song_file_name = song.split("/").at(-1);
+      let new_row = document.createElement("tr");
+      let td_left = document.createElement("td");
+      let td_right = document.createElement("td");
+      td_left.innerHTML = song_file_name;
+      td_right.innerHTML = '<audio controls><source src="/fs/' + album_name + '/' + song_file_name + '"></audio>';
+      new_row.appendChild(td_left);
+      new_row.appendChild(td_right);
+      table.appendChild(new_row);
+    });
+
+    //document.getElementById("album_listing").innerHTML = this.responseText;
+  }
+
+
+  xhr.open("GET","/album/" + album_name);
+  xhr.send();
+}
+
+
+  </script>
+</html>
