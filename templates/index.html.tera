@@ -26,7 +26,7 @@
     {% endfor %}
     </table>
     <table id="album_listing_table"></table>
-
+    <label for="artist_choice">Album Artist</label>
     <input list="artist_datalist" id="artist_choice" name="artist_choice"/>
     <datalist id="artist_datalist">
     {% for artist in artist_names %}
@@ -59,13 +59,22 @@ function updateAlbum() {
       let td_left = document.createElement("td");
       let td_right = document.createElement("td");
       td_left.innerHTML = song_file_name;
-      td_right.innerHTML = '<audio controls><source src="/fs/' + album_name + '/' + song_file_name + '"></audio>';
+      switch (song_file_name.slice(-4)) {
+        case "flac":
+        case ".mp3":
+        case ".ogg":
+        case ".wav":
+          td_right.innerHTML = '<audio controls><source src="/fs/' + album_name + '/' + song_file_name + '"></audio>';
+          break;
+        default:
+          td_right.innerHTML = "";
+      }
+      
       new_row.appendChild(td_left);
       new_row.appendChild(td_right);
       table.appendChild(new_row);
     });
 
-    //document.getElementById("album_listing").innerHTML = this.responseText;
   }
 
 
