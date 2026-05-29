@@ -78,7 +78,9 @@ fn get_album_contents(folder: &str) -> Json<Vec<String>> {
 
 #[derive(FromForm)]
 struct MoveAction<'r> {
+    #[field(validate = len(1..))]
     album_folder: &'r str,
+    #[field(validate = len(1..))]
     artist_choice: &'r str
 }
 
