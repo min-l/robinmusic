@@ -12,7 +12,8 @@ use rocket::serde::{Serialize, json::Json};
 use std::error::Error;
 use rocket::form::FromForm;
 use rocket::form::Form;
-
+use rocket::response::Flash;
+use rocket::response::Redirect;
 
 const SLSK_FOLDER: &str = "/home/minty/projects/robinpage/album_test";
 const JF_FOLDER: &str = "/home/minty/projects/robinpage";
@@ -81,11 +82,13 @@ struct MoveAction<'r> {
     #[field(validate = len(1..))]
     album_folder: &'r str,
     #[field(validate = len(1..))]
-    artist_choice: &'r str
+    artist_choice: &'r str,
+    #[field(validate = len(1..))]
+    send_place: &'r str
 }
 
 #[post("/move", data = "<move_action>")]
-fn move_folder(move_action : Form<MoveAction<'_>>) {
+fn move_folder(move_action : Form<MoveAction<'_>>) -> Flash<Redirect> {
     let mut from_loc: String = SLSK_FOLDER.to_owned();
     from_loc.push_str("/");
     
@@ -97,7 +100,7 @@ fn move_folder(move_action : Form<MoveAction<'_>>) {
     
     from_loc.push_str(album);
 
-    let mut to_loc: String = JF_FOLDER.to_owned();
+    let mut to_loc: String = if move_action.send_place == "jellyfin_check" {JF_FOLDER.to_owned()} else if move_action.send_place == "subfolder_check" {SLSK_FOLDER.to_owned()} else {return Flash::error(Redirect::to("/"), "malformed :(");};
     to_loc.push_str("/");
 
     let mut artist = move_action.artist_choice;
@@ -117,6 +120,7 @@ fn move_folder(move_action : Form<MoveAction<'_>>) {
     println!("from: {} to: {}",from_loc,to_loc);
 
     fs::rename(from_loc,to_loc).unwrap();
+    Flash::success(Redirect::to(uri!("/")), "it did that thing")
 }
 
 

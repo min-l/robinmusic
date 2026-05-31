@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>robinserverpage</title>
-    <!--<link href="/style.css" rel="stylesheet" type="text/css" media="all">-->#
+    <!--<link href="/style.css" rel="stylesheet" type="text/css" media="all">-->
 
     <style>
       table {
@@ -16,29 +16,62 @@
     </style>
   </head>
   <body>
+    <p id="message" style="color: green;"></p>
+    <p id="e_message" style="color: red;"></p>
     <h1>let's use the computer</h1>
+    <ul>
+      <li><a href="http://192.168.1.9:8096">jellyfin server (local)</a></li>
+      <li><a href="http://192.168.1.9:5030">soulseek web interface</a></li>
+    </ul>
+    <h2>Soulseek File Transfer</h2>
+    <p>use this function to move soulseek downloads to the jellyfin server. <a href="http://192.168.1.9:5030/downloads">please check that downloads are completed before moving them</a></p>
     <form action="/move" method="post">
     <table>
     {% for file_name in file_names %}
       <tr>
-      <td><input type="radio" id="{{file_name}}" name="album_folder" value="{{file_name}}" onchange="updateAlbum()"></td><td>{{file_name}}</td>
+      <td><input type="radio" id="{{file_name}}" name="album_folder" value="{{file_name}}" onchange="updateAlbum()" autocomplete="off"></td><td>{{file_name}}</td>
       </tr>
     {% endfor %}
     </table>
     <table id="album_listing_table"></table>
-    <label for="artist_choice">Album Artist</label>
+
+        <input type="radio" id="jellyfin_check" value="jellyfin_check" name="send_place" onchange="updateLabel()" autocomplete="off"><label for="jellyfin_check">Move to Jellyfin Artist Folder</label>
+        <input type="radio" id="subfolder_check" value="subfolder_check" name="send_place" onchange="updateLabel()" autocomplete="off"><label for="subfolder_check">Move to Soulseek Subfolder (for multi-folder albums, ie. multi-disc)</label>
+        <br><br>
+
+
+    <label id="artist_label" for="artist_choice">Album Artist</label>
     <input list="artist_datalist" id="artist_choice" name="artist_choice"/>
     <datalist id="artist_datalist">
     {% for artist in artist_names %}
       <option value="{{artist}}"></option>
     {% endfor %}
     </datalist>
-    <input type="submit" value="Submit">
+    <input id="submit_butt" type="submit" value="Submit" disabled>
     </form>
   </body>
 
   <script>
 
+function allowSubmit() {
+  let submit_button = document.getElementById("submit_butt");
+  if (document.querySelector('input[name="send_place"]:checked') == null || document.querySelector('input[name="album_folder"]:checked') == null) {
+    submit_button.disabled = true;
+  } else {
+    submit_button.disabled = false;
+  }
+}
+
+function updateLabel() {
+  let label_element = document.getElementById("artist_label");
+  let send_place = document.querySelector('input[name="send_place"]:checked').value;
+  if (send_place == "jellyfin_check") {
+    label_element.innerHTML = "Album Artist";
+  } else {
+    label_element.innerHTML = "Album Folder Name"
+  }
+  allowSubmit();
+}
 
 
 function updateAlbum() {
@@ -74,13 +107,30 @@ function updateAlbum() {
       new_row.appendChild(td_right);
       table.appendChild(new_row);
     });
-
+    
   }
 
 
   xhr.open("GET","/album/" + album_name);
   xhr.send();
+  allowSubmit();
 }
+allowSubmit();
+
+let cookies = decodeURIComponent(document.cookie);
+console.log(cookies);
+cookies = cookies.split(";");
+
+cookies.forEach(cooky => {
+  if (cooky.substring(0,6) == "_flash") {
+    let message = cooky.split(":")[1];
+    if (message.substring(0,7) == "success") {
+      document.getElementById("message").innerHTML = message.substring(7);
+    } else {
+      document.getElementById("e_message").innerHTML = message;
+    }
+  }
+});
 
 
   </script>
